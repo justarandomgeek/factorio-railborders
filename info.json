@@ -1,0 +1,11 @@
+{
+  "name": "railborders",
+  "version": "0.0.4",
+  "factorio_version": "0.16",
+  "title": "Rail Borders",
+  "author": "justarandomgeek",
+  "homepage": "",
+  "contact": "justarandomgeek@gmail.com",
+  "description": "Rail Borders for ribbon worlds",
+  "dependencies": ["base >= 0.16.0"]
+}
