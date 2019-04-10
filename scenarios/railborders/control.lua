@@ -3,7 +3,7 @@ local version = 4
 
 script.on_event(defines.events.on_player_created, function(event)
   local player = game.players[event.player_index]
-  player.insert{name="steel-axe", count=1}
+
   player.insert{name="iron-plate", count=200}
   player.insert{name="copper-plate", count=200}
   player.insert{name="shotgun", count=1}
@@ -37,6 +37,16 @@ end)
 
 script.on_init(function()
   global.version = version
+
+  local surface = game.surfaces['nauvis']
+
+  local mgs = surface.map_gen_settings
+
+  -- ensure height has appropriate margin alignment - needs to be 12 tiles beyond a chunk boundary
+  mgs.height = mgs.height + (24-(mgs.height % 32))
+
+  surface.map_gen_settings = mgs
+
   silo_script.on_init()
 end)
 
