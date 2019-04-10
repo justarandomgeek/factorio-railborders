@@ -1,5 +1,3 @@
-require("silo-script")
-local version = 4
 
 script.on_event(defines.events.on_player_created, function(event)
   local player = game.players[event.player_index]
@@ -25,91 +23,28 @@ script.on_event(defines.events.on_player_created, function(event)
 
   player.insert{name="construction-robot", count=20}
 
-
-  player.force.chart(player.surface, {{player.position.x - 200, player.position.y - 200}, {player.position.x + 200, player.position.y + 200}})
-
-  silo_script.on_player_created(event)
-end)
-
-script.on_event(defines.events.on_gui_click, function(event)
-  silo_script.on_gui_click(event)
+  player.insert{name="locomotive", count=1}
+  player.insert{name="nuclear-fuel", count=1}
 end)
 
 script.on_init(function()
-  global.version = version
-
   local surface = game.surfaces['nauvis']
 
   local mgs = surface.map_gen_settings
+
+  -- if height wasn't set, just set it... 128 is the default for Ribbon World preset
+  mgs.height = mgs.height or 128
 
   -- ensure height has appropriate margin alignment - needs to be 12 tiles beyond a chunk boundary
   mgs.height = mgs.height + (24-(mgs.height % 32))
 
   surface.map_gen_settings = mgs
 
-  silo_script.on_init()
-end)
-
-script.on_event(defines.events.on_rocket_launched, function(event)
-  silo_script.on_rocket_launched(event)
 end)
 
 script.on_configuration_changed(function(event)
-  if global.version ~= version then
-    local surface = game.surfaces['nauvis']
-    if global.version < 2 then
-      game.print("fixing minable rails...")
-      for _,ent in pairs(surface.find_entities_filtered{name="straight-rail", force=game.forces.neutral}) do
-        ent.minable=false
-        ent.destructible=false
-      end
-    end
-    if global.version < 3 then
-      game.print("regenerating poles...")
-      local height = surface.map_gen_settings.height/2
-      for chunk in surface.get_chunks() do
-        if surface.is_chunk_generated(chunk) then
-          area = {
-            left_top={x=chunk.x*32,y=chunk.y*32},
-            right_bottom={x=(chunk.x+1)*32,y=(chunk.y+1)*32}
-          }
-          if area.left_top.y < -height then
-            generate_poles(-1,surface,area)
-          elseif area.right_bottom.y > height then
-            generate_poles(1,surface,area)
-          end
-        end
-      end
-    end
-    if global.version < 4 then
-      game.print("regenerating edge tiles as water...")
-      local height = surface.map_gen_settings.height/2
-      for chunk in surface.get_chunks() do
-        if surface.is_chunk_generated(chunk) then
-          area = {
-            left_top={x=chunk.x*32,y=chunk.y*32},
-            right_bottom={x=(chunk.x+1)*32,y=(chunk.y+1)*32}
-          }
-          local tiles = {}
-          if area.left_top.y < -height then
-            for x=area.left_top.x,area.right_bottom.x do
-              tiles[#tiles+1] = {name='water' , position = {x,-height}}
-            end
-          elseif area.right_bottom.y > height then
-            for x=area.left_top.x,area.right_bottom.x do
-              tiles[#tiles+1] = {name='water' , position = {x,height-1}}
-            end
-          end
-          surface.set_tiles(tiles)
-        end
-      end
-    end
-    global.version = version
-  end
-  silo_script.on_configuration_changed(event)
-end)
 
-silo_script.add_remote_interface()
+end)
 
 
 local top={
@@ -173,10 +108,11 @@ script.on_event(defines.events.on_chunk_generated, function(event)
       end
       surface.set_tiles(tiles)
 
-      for x=event.area.left_top.x+1,event.area.right_bottom.x+1,2 do
+      for x=event.area.left_top.x+1,event.area.right_bottom.x-1,2 do
         local ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,-height+3}}
         ent.minable = false
         ent.destructible = false
+
         ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,-height+9}}
         ent.minable = false
         ent.destructible = false
@@ -203,10 +139,11 @@ script.on_event(defines.events.on_chunk_generated, function(event)
       end
       surface.set_tiles(tiles)
 
-      for x=event.area.left_top.x+1,event.area.right_bottom.x+1,2 do
+      for x=event.area.left_top.x+1,event.area.right_bottom.x-1,2 do
         local ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,height-3}}
         ent.minable = false
         ent.destructible = false
+
         ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,height-9}}
         ent.minable = false
         ent.destructible = false
