@@ -1,32 +1,3 @@
-
-script.on_event(defines.events.on_player_created, function(event)
-  local player = game.players[event.player_index]
-
-  player.insert{name="iron-plate", count=200}
-  player.insert{name="copper-plate", count=200}
-  player.insert{name="shotgun", count=1}
-  player.insert{name="shotgun-shell", count=50}
-
-  player.insert{name="modular-armor", count=1}
-
-  local grid = player.get_inventory(defines.inventory.player_armor)[1].grid
-
-  grid.put{name="personal-roboport-equipment", position = {0,0} }
-  grid.put{name="personal-roboport-equipment", position = {3,0} }
-  grid.put{name="battery-equipment", position = {2,0} }
-
-  for x = 0,4 do
-    for y = 2,4 do
-      grid.put{name="solar-panel-equipment", position={x,y}}
-    end
-  end
-
-  player.insert{name="construction-robot", count=20}
-
-  player.insert{name="locomotive", count=1}
-  player.insert{name="nuclear-fuel", count=1}
-end)
-
 script.on_init(function()
   local surface = game.surfaces['nauvis']
 
@@ -62,28 +33,36 @@ local bottom={
 }
 
 function generate_poles(upperlower,surface,area)
-  local height = surface.map_gen_settings.height/2
-  local poles = {}
-  for key,pos in pairs({
-    {area.left_top.x,   upperlower*(height-6)},
-    {area.left_top.x+16,upperlower*(height-6)},
-    {area.left_top.x+32,upperlower*(height-6)},
-  }) do
-    local pole = surface.find_entity("big-electric-pole",pos)
-    if not pole then
-      pole = surface.create_entity{name="big-electric-pole", force=game.forces.neutral, position=pos}
+  if settings.global["railborders-place-poles"].value then
+    local height = surface.map_gen_settings.height/2
+    local poles = {}
+    for key,pos in pairs({
+      {area.left_top.x,   upperlower*(height-6)},
+      {area.left_top.x+16,upperlower*(height-6)},
+      {area.left_top.x+32,upperlower*(height-6)},
+    }) do
+      local pole = surface.find_entity("big-electric-pole",pos)
+      if not pole then
+        pole = surface.create_entity{name="big-electric-pole", force=game.forces.neutral, position=pos}
+      end
+
+      pole.minable = false
+      pole.destructible = false
+
+      poles[key] = pole
     end
 
-    pole.minable = false
-    pole.destructible = false
+    local wires = settings.global["railborders-pole-wires"].value
+    if wires == "red" or wires == "both" then
+      poles[2].connect_neighbour{target_entity=poles[1], wire=defines.wire_type.red}
+      poles[2].connect_neighbour{target_entity=poles[3], wire=defines.wire_type.red}
+    end
 
-    poles[key] = pole
+    if wires == "green" or wires == "both" then
+      poles[2].connect_neighbour{target_entity=poles[1], wire=defines.wire_type.green}
+      poles[2].connect_neighbour{target_entity=poles[3], wire=defines.wire_type.green}
+    end
   end
-
-  poles[2].connect_neighbour{target_entity=poles[1], wire=defines.wire_type.red}
-  poles[2].connect_neighbour{target_entity=poles[1], wire=defines.wire_type.green}
-  poles[2].connect_neighbour{target_entity=poles[3], wire=defines.wire_type.red}
-  poles[2].connect_neighbour{target_entity=poles[3], wire=defines.wire_type.green}
 end
 
 script.on_event(defines.events.on_chunk_generated, function(event)
@@ -109,11 +88,11 @@ script.on_event(defines.events.on_chunk_generated, function(event)
       surface.set_tiles(tiles)
 
       for x=event.area.left_top.x+1,event.area.right_bottom.x-1,2 do
-        local ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,-height+3}}
+        local ent = surface.create_entity{name="express-straight-rail", force=game.forces.neutral, direction=2, position={x,-height+3}}
         ent.minable = false
         ent.destructible = false
 
-        ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,-height+9}}
+        ent = surface.create_entity{name="local-straight-rail", force=game.forces.neutral, direction=2, position={x,-height+9}}
         ent.minable = false
         ent.destructible = false
       end
@@ -140,11 +119,11 @@ script.on_event(defines.events.on_chunk_generated, function(event)
       surface.set_tiles(tiles)
 
       for x=event.area.left_top.x+1,event.area.right_bottom.x-1,2 do
-        local ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,height-3}}
+        local ent = surface.create_entity{name="express-straight-rail", force=game.forces.neutral, direction=2, position={x,height-3}}
         ent.minable = false
         ent.destructible = false
 
-        ent = surface.create_entity{name="straight-rail", force=game.forces.neutral, direction=2, position={x,height-9}}
+        ent = surface.create_entity{name="local-straight-rail", force=game.forces.neutral, direction=2, position={x,height-9}}
         ent.minable = false
         ent.destructible = false
       end

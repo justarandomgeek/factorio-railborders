@@ -7,5 +7,5 @@
   "homepage": "",
   "contact": "justarandomgeek@gmail.com",
   "description": "Rail Borders for ribbon worlds",
-  "dependencies": ["base >= 0.17.0"]
+  "dependencies": ["base >= 0.17.0", "priority-rails >= 0.17.0"]
 }
